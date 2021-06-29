@@ -10983,7 +10983,7 @@ var Header = function () {
         }
         var main_domain = 'https://app.deriv.' + getTopLevelDomain();
         var is_logged_in = Client.isLoggedIn();
-        var has_dxtrade = (State.getResponse('landing_company.dxtrade_gaming_company') || State.getResponse('landing_company.dxtrade_gaming_company')) && true;
+        var has_dxtrade = !!(State.getResponse('landing_company.dxtrade_gaming_company') || State.getResponse('landing_company.dxtrade_gaming_company'));
         var should_show_xtrade = is_logged_in ? has_dxtrade : !isEuCountry();
         var platforms = _extends({
             dtrader: {
