@@ -9167,6 +9167,7 @@ var urlLang = __webpack_require__(/*! ./language */ "./src/javascript/_common/la
 var createElement = __webpack_require__(/*! ./utility */ "./src/javascript/_common/utility.js").createElement;
 var isEmptyObject = __webpack_require__(/*! ./utility */ "./src/javascript/_common/utility.js").isEmptyObject;
 var getTopLevelDomain = __webpack_require__(/*! ./utility */ "./src/javascript/_common/utility.js").getTopLevelDomain;
+var Language = __webpack_require__(/*! ./language */ "./src/javascript/_common/language.js");
 var getCurrentBinaryDomain = __webpack_require__(/*! ../config */ "./src/javascript/config.js").getCurrentBinaryDomain;
 __webpack_require__(/*! url-polyfill */ "./node_modules/url-polyfill/url-polyfill.js");
 
@@ -9326,6 +9327,25 @@ var Url = function () {
         return new RegExp(name).test(hash) && value.length > 1 ? value[1] : '';
     };
 
+    var getStaticUrl = function getStaticUrl() {
+        var host = 'https://deriv';
+        var domain = getTopLevelDomain();
+        var lang = Language.get().toLowerCase();
+
+        if (lang && lang !== 'en') {
+            lang = '/' + lang;
+        } else {
+            lang = '';
+        }
+
+        if (lang.includes('_')) {
+            lang = lang.replace('_', '-');
+        }
+
+        var url = host + '.' + domain + lang;
+        return url;
+    };
+
     return {
         init: init,
         reset: reset,
@@ -9340,6 +9360,7 @@ var Url = function () {
         getSection: getSection,
         getHashValue: getHashValue,
         updateParamsWithoutReload: updateParamsWithoutReload,
+        getStaticUrl: getStaticUrl,
 
         param: function param(name) {
             return paramsHash()[name];
@@ -10902,8 +10923,8 @@ var Header = function () {
 
     var setHeaderUrls = function setHeaderUrls() {
         var btn__signup = getElementById('btn__signup');
-        var current_language = Language.get().toLowerCase();
-        var signup_url = 'https://deriv.' + getTopLevelDomain() + '/' + current_language + '/signup/';
+        var static_url = Url.getStaticUrl();
+        var signup_url = static_url + '/signup/';
         btn__signup.href = signup_url;
 
         applyToAllElements('.url-reports-positions', function (el) {
@@ -22810,10 +22831,9 @@ var addComma = __webpack_require__(/*! ../../../_common/base/currency_base */ ".
 var CommonFunctions = __webpack_require__(/*! ../../../_common/common_functions */ "./src/javascript/_common/common_functions.js");
 var localize = __webpack_require__(/*! ../../../_common/localize */ "./src/javascript/_common/localize.js").localize;
 var State = __webpack_require__(/*! ../../../_common/storage */ "./src/javascript/_common/storage.js").State;
-var urlFor = __webpack_require__(/*! ../../../_common/url */ "./src/javascript/_common/url.js").urlFor;
+var Url = __webpack_require__(/*! ../../../_common/url */ "./src/javascript/_common/url.js");
 var createElement = __webpack_require__(/*! ../../../_common/utility */ "./src/javascript/_common/utility.js").createElement;
 var getPropertyValue = __webpack_require__(/*! ../../../_common/utility */ "./src/javascript/_common/utility.js").getPropertyValue;
-var getTopLevelDomain = __webpack_require__(/*! ../../../_common/utility */ "./src/javascript/_common/utility.js").getTopLevelDomain;
 
 /*
  * Purchase object that handles all the functions related to
@@ -22903,7 +22923,7 @@ var Purchase = function () {
                                         authorization_error_btn_login.removeEventListener('click', loginOnClick);
                                         authorization_error_btn_login.addEventListener('click', loginOnClick);
 
-                                        signup_url = 'https://deriv.' + getTopLevelDomain() + '/signup/';
+                                        signup_url = Url.getStaticUrl() + '/signup/';
 
                                         authorization_error_btn_signup.href = signup_url;
                                     } else {
@@ -22930,7 +22950,7 @@ var Purchase = function () {
                                             } else if (/RestrictedCountry/.test(error.code)) {
                                                 var additional_message = '';
                                                 if (/FinancialBinaries/.test(error.code)) {
-                                                    additional_message = localize('Try our [_1]Synthetic Indices[_2].', ['<a href="' + urlFor('get-started/binary-options', 'anchor=synthetic-indices#range-of-markets') + '" >', '</a>']);
+                                                    additional_message = localize('Try our [_1]Synthetic Indices[_2].', ['<a href="' + Url.urlFor('get-started/binary-options', 'anchor=synthetic-indices#range-of-markets') + '" >', '</a>']);
                                                 } else if (/Random/.test(error.code)) {
                                                     additional_message = localize('Try our other markets.');
                                                 }
@@ -22938,7 +22958,7 @@ var Purchase = function () {
                                                 message = error.message + '. ' + additional_message;
                                             } else if (/ClientUnwelcome/.test(error.code) && /gb/.test(Client.get('residence'))) {
                                                 if (!Client.hasAccountType('real') && Client.get('is_virtual')) {
-                                                    message = localize('Please complete the [_1]Real Account form[_2] to verify your age as required by the [_3]UK Gambling[_4] Commission (UKGC).', ['<a href=\'' + urlFor('new_account/realws') + '\'>', '</a>', '<strong>', '</strong>']);
+                                                    message = localize('Please complete the [_1]Real Account form[_2] to verify your age as required by the [_3]UK Gambling[_4] Commission (UKGC).', ['<a href=\'' + Url.urlFor('new_account/realws') + '\'>', '</a>', '<strong>', '</strong>']);
                                                 } else if (Client.hasAccountType('real') && /^virtual|iom$/i.test(Client.get('landing_company_shortcode'))) {
                                                     message = localize('Account access is temporarily limited. Please check your inbox for more details.');
                                                 } else {
@@ -23086,7 +23106,7 @@ var Purchase = function () {
             var extra_attributes = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
             return createElement('div', _extends({ class: 'gr-12 gr-padding-20' }, extra_attributes));
         };
-        var button_element = createElement('a', { class: 'button', href: urlFor('user/settings/professional') });
+        var button_element = createElement('a', { class: 'button', href: Url.urlFor('user/settings/professional') });
         var cta_element = columnElement();
         var message_element = void 0;
 
