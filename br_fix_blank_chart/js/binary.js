@@ -9756,10 +9756,8 @@ var BinaryLoader = function () {
         ThirdPartyLinks.init();
     };
 
-    var beforeContentChange = function beforeContentChange(e) {
-        if (e) {
-            e.target.preventDefault();
-        }
+    var beforeContentChange = function beforeContentChange() {
+
         if (active_script) {
             BinarySocket.removeOnDisconnect();
             BinarySocket.removeOnReconnect();
