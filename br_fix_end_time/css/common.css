@@ -3101,8 +3101,7 @@ body.ZH_TW .google-play-badge {
     max-height: 100%; }
   input:not([type='checkbox']), select {
     width: 75%;
-    height: 26px;
-    position: relative; }
+    height: 26px; }
   .center-text-m, .center-text-m div:first-child label {
     text-align: center; }
   #btn_verify_email {
