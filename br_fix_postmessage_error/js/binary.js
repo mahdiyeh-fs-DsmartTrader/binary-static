@@ -283,6 +283,7 @@ var ClientBase = function () {
     var client_object = {};
     var total_balance = {};
     var current_loginid = void 0;
+    var has_readystate_listener = false;
 
     var init = function init() {
         current_loginid = LocalStore.get('active_loginid');
@@ -719,13 +720,12 @@ var ClientBase = function () {
 
     var syncWithDerivApp = function syncWithDerivApp(active_loginid, client_accounts) {
         var iframe_window = document.getElementById('localstorage-sync');
-        if (iframe_window) {
-            iframe_window.onload = function () {
-                var origin = getAllowedLocalStorageOrigin();
-                if (!origin) {
-                    return;
-                }
+        var origin = getAllowedLocalStorageOrigin();
 
+        if (!iframe_window || !origin) return;
+
+        if (document.readyState === 'complete') {
+            iframe_window.onload = function () {
                 // Keep client.accounts in sync (in case user wasn't logged in).
                 if (iframe_window.src === origin + '/localstorage-sync.html') {
                     iframe_window.contentWindow.postMessage({
@@ -738,6 +738,28 @@ var ClientBase = function () {
                     }, origin);
                 }
             };
+
+            return;
+        }
+
+        if (!has_readystate_listener) {
+            has_readystate_listener = true;
+
+            document.addEventListener('readystatechange', function () {
+                iframe_window.onload = function () {
+                    // Keep client.accounts in sync (in case user wasn't logged in).
+                    if (iframe_window.src === origin + '/localstorage-sync.html') {
+                        iframe_window.contentWindow.postMessage({
+                            key: 'client.accounts',
+                            value: JSON.stringify(client_accounts)
+                        }, origin);
+                        iframe_window.contentWindow.postMessage({
+                            key: 'active_loginid',
+                            value: active_loginid
+                        }, origin);
+                    }
+                };
+            });
         }
     };
 
@@ -1906,7 +1928,7 @@ var BinarySocketBase = function () {
     var is_disconnect_called = false;
     var is_connected_before = false;
 
-    var socket_url = getSocketURL() + '?app_id=' + getAppId() + '&l=' + getLanguage() + '&brand=binary';
+    var socket_url = getSocketURL() + '?app_id=' + getAppId() + '&l=' + getLanguage() + '&brand=Deriv';
     var timeouts = {};
     var promises = {};
 
@@ -9155,6 +9177,7 @@ var urlLang = __webpack_require__(/*! ./language */ "./src/javascript/_common/la
 var createElement = __webpack_require__(/*! ./utility */ "./src/javascript/_common/utility.js").createElement;
 var isEmptyObject = __webpack_require__(/*! ./utility */ "./src/javascript/_common/utility.js").isEmptyObject;
 var getTopLevelDomain = __webpack_require__(/*! ./utility */ "./src/javascript/_common/utility.js").getTopLevelDomain;
+var Language = __webpack_require__(/*! ./language */ "./src/javascript/_common/language.js");
 var getCurrentBinaryDomain = __webpack_require__(/*! ../config */ "./src/javascript/config.js").getCurrentBinaryDomain;
 __webpack_require__(/*! url-polyfill */ "./node_modules/url-polyfill/url-polyfill.js");
 
@@ -9314,6 +9337,25 @@ var Url = function () {
         return new RegExp(name).test(hash) && value.length > 1 ? value[1] : '';
     };
 
+    var getStaticUrl = function getStaticUrl() {
+        var host = 'https://deriv';
+        var domain = getTopLevelDomain();
+        var lang = Language.get().toLowerCase();
+
+        if (lang && lang !== 'en') {
+            lang = '/' + lang;
+        } else {
+            lang = '';
+        }
+
+        if (lang.includes('_')) {
+            lang = lang.replace('_', '-');
+        }
+
+        var url = host + '.' + domain + lang;
+        return url;
+    };
+
     return {
         init: init,
         reset: reset,
@@ -9328,6 +9370,7 @@ var Url = function () {
         getSection: getSection,
         getHashValue: getHashValue,
         updateParamsWithoutReload: updateParamsWithoutReload,
+        getStaticUrl: getStaticUrl,
 
         param: function param(name) {
             return paramsHash()[name];
@@ -9631,6 +9674,12 @@ var getTopLevelDomain = function getTopLevelDomain() {
     return current_domain ? current_domain.split('.').splice(-1) : 'com';
 };
 
+var getHostname = function getHostname() {
+    var is_staging = window.location.hostname === 'staging-smarttrader.deriv.com';
+
+    return 'https://' + (is_staging ? 'staging-app' : 'app') + '.deriv.' + getTopLevelDomain();
+};
+
 var PromiseClass = function PromiseClass() {
     var _this = this;
 
@@ -9667,6 +9716,7 @@ module.exports = {
     PromiseClass: PromiseClass,
     removeObjProperties: removeObjProperties,
     getTopLevelDomain: getTopLevelDomain,
+    getHostname: getHostname,
     lc_licenseID: lc_licenseID,
     lc_clientID: lc_clientID
 };
@@ -10600,9 +10650,8 @@ var applyToAllElements = __webpack_require__(/*! ../../_common/utility */ "./src
 
 var Clock = function () {
     var fncExternalTimer = void 0;
-
+    var el_clock_selector = '.gmt-clock';
     var startClock = function startClock() {
-
         ServerTime.init(onTimeUpdated);
     };
 
@@ -10611,9 +10660,10 @@ var Clock = function () {
         window.time = server_time;
 
         var time_str = server_time.format('YYYY-MM-DD HH:mm:ss') + ' GMT';
-        applyToAllElements('.gmt-clock', function (el) {
+        applyToAllElements(el_clock_selector, function (el) {
             elementInnerHtml(el, time_str);
         });
+        showLocalTimeOnHover(el_clock_selector);
 
         if (typeof fncExternalTimer === 'function') {
             fncExternalTimer();
@@ -10633,7 +10683,6 @@ var Clock = function () {
     return {
         startClock: startClock,
         showLocalTimeOnHover: showLocalTimeOnHover,
-
         setExternalTimer: function setExternalTimer(func) {
             fncExternalTimer = func;
         }
@@ -10850,6 +10899,7 @@ var applyToAllElements = __webpack_require__(/*! ../../_common/utility */ "./src
 var createElement = __webpack_require__(/*! ../../_common/utility */ "./src/javascript/_common/utility.js").createElement;
 var findParent = __webpack_require__(/*! ../../_common/utility */ "./src/javascript/_common/utility.js").findParent;
 var getTopLevelDomain = __webpack_require__(/*! ../../_common/utility */ "./src/javascript/_common/utility.js").getTopLevelDomain;
+var getHostname = __webpack_require__(/*! ../../_common/utility */ "./src/javascript/_common/utility.js").getHostname;
 var template = __webpack_require__(/*! ../../_common/utility */ "./src/javascript/_common/utility.js").template;
 var Language = __webpack_require__(/*! ../../_common/language */ "./src/javascript/_common/language.js");
 
@@ -10882,7 +10932,8 @@ var Header = function () {
 
     var setHeaderUrls = function setHeaderUrls() {
         var btn__signup = getElementById('btn__signup');
-        var signup_url = 'https://deriv.' + getTopLevelDomain() + '/signup/';
+        var static_url = Url.getStaticUrl();
+        var signup_url = static_url + '/signup/';
         btn__signup.href = signup_url;
 
         applyToAllElements('.url-reports-positions', function (el) {
@@ -10978,7 +11029,7 @@ var Header = function () {
         if (platform_list.hasChildNodes()) {
             return;
         }
-        var main_domain = 'https://app.deriv.' + getTopLevelDomain();
+        var main_domain = getHostname();
         var platforms = {
             dtrader: {
                 name: 'DTrader',
@@ -10996,7 +11047,7 @@ var Header = function () {
             },
             dmt5: {
                 name: 'DMT5',
-                desc: 'The platform of choice for professionals worldwide.',
+                desc: 'Trade on Deriv MetaTrader 5 (DMT5), the all-in-one FX and CFD trading platform.',
                 link: main_domain + '/mt5',
                 icon: 'ic-brand-dmt5.svg',
                 on_mobile: true
@@ -11004,7 +11055,7 @@ var Header = function () {
             },
             smarttrader: {
                 name: 'SmartTrader',
-                desc: 'Trade the world\'s markets on Binary.com\'s classic platform.',
+                desc: 'Trade the world\'s markets with our popular user-friendly platform.',
                 link: '#',
                 icon: 'logo_smart_trader.svg',
                 on_mobile: true
@@ -11781,7 +11832,7 @@ var Header = function () {
                     return { key: 'exluded_until', title: localize('Self-exclusion'), message: buildSpecificMessage(localizeKeepPlaceholders('Your account is restricted. Kindly [_1]contact customer support[_2] for assistance.'), ['' + formatDate(Client.get('excluded_until') || new Date()), '<a class="header__notification-link" href="https://www.deriv.' + getTopLevelDomain() + '/contact-us/">', '</a>']), type: 'danger' };
                 },
                 financial_limit: function financial_limit() {
-                    return { key: 'financial_limit', title: localize('Remove deposit limits'), message: buildMessage(localizeKeepPlaceholders('Please set your [_1]30-day turnover limit[_2] to remove deposit limits.'), 'user/security/self_exclusionws'), type: 'warning' };
+                    return { key: 'financial_limit', title: localize('Remove deposit limits'), message: buildMessage(localizeKeepPlaceholders('Please set your [_1]30-day turnover limit[_2] to remove deposit limits.'), Url.urlForDeriv('cashier/deposit', 'ext_platform_url=' + encodeURIComponent(window.location.href))), type: 'warning' };
                 }, // TODO: handle this when self exclusion is available
                 mt5_withdrawal_locked: function mt5_withdrawal_locked() {
                     return { key: 'mt5_withdrawal_locked', title: localize('MT5 withdrawal disabled'), message: localize('MT5 withdrawals have been disabled on your account. Please check your email for more details.'), type: 'warning' };
@@ -11937,7 +11988,7 @@ var Header = function () {
 
             var checkStatus = function checkStatus(check_statuses) {
                 var notified = check_statuses.some(function (check_type) {
-                    if (validations[check_type]()) {
+                    if (validations[check_type]() && messages[check_type]) {
                         displayNotification(messages[check_type]());
                         // return true;
                     }
@@ -13051,7 +13102,6 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 var isEmptyObject = __webpack_require__(/*! ../../_common/utility */ "./src/javascript/_common/utility.js").isEmptyObject;
-var removeObjProperties = __webpack_require__(/*! ../../_common/utility */ "./src/javascript/_common/utility.js").removeObjProperties;
 
 var submarket_order = {
     forex: 0,
@@ -13227,20 +13277,11 @@ var ActiveSymbols = function () {
         return trade_markets_list;
     };
 
-    // The unavailable underlyings and markets are only offered on deriv.com.
-    var unavailable_underlyings = ['BOOM500', 'BOOM1000', 'CRASH500', 'CRASH1000', 'stpRNG'];
-    var unavailable_markets = ['cryptocurrency'];
-
     var getAvailableUnderlyings = function getAvailableUnderlyings(markets_list) {
         var markets_list_clone = clone(markets_list);
 
-        unavailable_markets.forEach(function (item) {
-            return markets_list_clone[item] && delete markets_list_clone[item];
-        });
-
         Object.keys(markets_list_clone).forEach(function (market_key) {
             Object.keys(markets_list_clone[market_key].submarkets).forEach(function (submarket_key) {
-                removeObjProperties(unavailable_underlyings, markets_list_clone[market_key].submarkets[submarket_key].symbols);
                 if (Object.keys(markets_list_clone[market_key].submarkets[submarket_key].symbols).length === 0) {
                     delete markets_list_clone[market_key].submarkets[submarket_key];
                 }
@@ -14926,7 +14967,9 @@ var Guide = function () {
             blink_inDelay: 1000,
             blink_outDelay: 1000,
             blink_interval: 3000, // 0: continous blinking (blink_inDelay + blink_outDelay)
-            blink_count: 0 // 0: infinite
+            blink_count: 0, // 0: infinite
+            contractList: '#contracts_list',
+            closeConfirmation: '#close_confirmation_container'
         };
         $.extend(true, opt, options);
 
@@ -14984,8 +15027,13 @@ var Guide = function () {
     var setEvents = function setEvents() {
         $(opt.guideBtnID + ' strong').click(function () {
             var enjoyhint_instance = new EnjoyHint({});
+            var contractList = $(opt.contractList);
+            var closeConfirmation = $(opt.closeConfirmation);
             enjoyhint_instance.setScript(getScript(opt.script));
             enjoyhint_instance.runScript();
+            if (contractList.css('display') === 'none') {
+                closeConfirmation.click();
+            }
         });
 
         if (opt.autoStart) {
@@ -18981,14 +19029,14 @@ var Contracts = (_temp = _class = function (_React$Component) {
                 _react2.default.createElement(
                     'div',
                     {
-                        className: 'contract_current ' + (contracts_tree.length <= 1 ? 'disabled' : ''),
+                        className: 'contract_current ' + (contracts_tree.length < 1 ? 'disabled' : ''),
                         onClick: this.openDropDown
                     },
                     _react2.default.createElement(
                         'span',
                         { className: 'type' },
                         this.getCurrentType(),
-                        _react2.default.createElement('span', { className: 'arrow_down ' + (contracts_tree.length <= 1 ? 'invisible' : '') })
+                        _react2.default.createElement('span', { className: 'arrow_down ' + (contracts_tree.length < 1 ? 'invisible' : '') })
                     ),
                     _react2.default.createElement(
                         'span',
@@ -19081,7 +19129,7 @@ var Contracts = (_temp = _class = function (_React$Component) {
     };
 
     this.openDropDown = function () {
-        if (_this3.state.contracts_tree.length <= 1) return;
+        if (_this3.state.contracts_tree.length < 1) return;
         _this3.positionDropDown();
         _this3.setState({ open: true });
     };
@@ -19821,6 +19869,7 @@ var toISOFormat = __webpack_require__(/*! ../../../_common/string_util */ "./src
 var toReadableFormat = __webpack_require__(/*! ../../../_common/string_util */ "./src/javascript/_common/string_util.js").toReadableFormat;
 var createElement = __webpack_require__(/*! ../../../_common/utility */ "./src/javascript/_common/utility.js").createElement;
 var getPropertyValue = __webpack_require__(/*! ../../../_common/utility */ "./src/javascript/_common/utility.js").getPropertyValue;
+var elementInnerHtml = __webpack_require__(/*! ../../../_common/common_functions */ "./src/javascript/_common/common_functions.js").elementInnerHtml;
 
 /*
  * Handles duration processing display
@@ -20090,6 +20139,7 @@ var Durations = function () {
         if (selected_duration.amount && selected_duration.unit > unit_value) {
             unit_value = selected_duration.amount;
         }
+
         CommonFunctions.getElementById('duration_amount').value = unit_value;
         Defaults.set('duration_amount', unit_value);
         displayExpiryType();
@@ -20397,6 +20447,7 @@ var Durations = function () {
             return;
         }
 
+        var duration_tooltip_element = CommonFunctions.getElementById('duration_tooltip');
         var duration_min_element = CommonFunctions.getElementById('duration_minimum');
         var duration_max_element = CommonFunctions.getElementById('duration_maximum');
         duration_wrapper_element.setVisibility(1);
@@ -20404,10 +20455,16 @@ var Durations = function () {
         if (+duration_amount_element.value < +duration_min_element.textContent) {
             duration_amount_element.classList.add('error-field');
             duration_wrapper_element.classList.add('error-msg');
+            duration_min_element.classList.remove('invisible');
+            duration_max_element.classList.add('invisible');
+            elementInnerHtml(duration_tooltip_element, 'Minimum:');
             Reset.hideResetTime();
         } else if (+duration_max_element.textContent && +duration_amount_element.value > +duration_max_element.textContent) {
             duration_amount_element.classList.add('error-field');
-            duration_wrapper_element.classList.remove('error-msg');
+            duration_wrapper_element.classList.add('error-msg');
+            duration_min_element.classList.add('invisible');
+            duration_max_element.classList.remove('invisible');
+            elementInnerHtml(duration_tooltip_element, 'Maximum:');
             Reset.hideResetTime();
         } else {
             duration_amount_element.classList.remove('error-field');
@@ -20415,6 +20472,9 @@ var Durations = function () {
             if (Reset.isReset(Contract.form())) {
                 Reset.displayResetTime(duration_amount_element.value, Defaults.get('duration_units'));
             } else {
+                duration_min_element.classList.remove('invisible');
+                duration_max_element.classList.add('invisible');
+                elementInnerHtml(duration_tooltip_element, 'Minimum:');
                 Reset.hideResetTime();
             }
         }
@@ -22799,10 +22859,9 @@ var addComma = __webpack_require__(/*! ../../../_common/base/currency_base */ ".
 var CommonFunctions = __webpack_require__(/*! ../../../_common/common_functions */ "./src/javascript/_common/common_functions.js");
 var localize = __webpack_require__(/*! ../../../_common/localize */ "./src/javascript/_common/localize.js").localize;
 var State = __webpack_require__(/*! ../../../_common/storage */ "./src/javascript/_common/storage.js").State;
-var urlFor = __webpack_require__(/*! ../../../_common/url */ "./src/javascript/_common/url.js").urlFor;
+var Url = __webpack_require__(/*! ../../../_common/url */ "./src/javascript/_common/url.js");
 var createElement = __webpack_require__(/*! ../../../_common/utility */ "./src/javascript/_common/utility.js").createElement;
 var getPropertyValue = __webpack_require__(/*! ../../../_common/utility */ "./src/javascript/_common/utility.js").getPropertyValue;
-var getTopLevelDomain = __webpack_require__(/*! ../../../_common/utility */ "./src/javascript/_common/utility.js").getTopLevelDomain;
 
 /*
  * Purchase object that handles all the functions related to
@@ -22892,7 +22951,7 @@ var Purchase = function () {
                                         authorization_error_btn_login.removeEventListener('click', loginOnClick);
                                         authorization_error_btn_login.addEventListener('click', loginOnClick);
 
-                                        signup_url = 'https://deriv.' + getTopLevelDomain() + '/signup/';
+                                        signup_url = Url.getStaticUrl() + '/signup/';
 
                                         authorization_error_btn_signup.href = signup_url;
                                     } else {
@@ -22919,7 +22978,7 @@ var Purchase = function () {
                                             } else if (/RestrictedCountry/.test(error.code)) {
                                                 var additional_message = '';
                                                 if (/FinancialBinaries/.test(error.code)) {
-                                                    additional_message = localize('Try our [_1]Synthetic Indices[_2].', ['<a href="' + urlFor('get-started/binary-options', 'anchor=synthetic-indices#range-of-markets') + '" >', '</a>']);
+                                                    additional_message = localize('Try our [_1]Synthetic Indices[_2].', ['<a href="' + Url.urlFor('get-started/binary-options', 'anchor=synthetic-indices#range-of-markets') + '" >', '</a>']);
                                                 } else if (/Random/.test(error.code)) {
                                                     additional_message = localize('Try our other markets.');
                                                 }
@@ -22927,7 +22986,7 @@ var Purchase = function () {
                                                 message = error.message + '. ' + additional_message;
                                             } else if (/ClientUnwelcome/.test(error.code) && /gb/.test(Client.get('residence'))) {
                                                 if (!Client.hasAccountType('real') && Client.get('is_virtual')) {
-                                                    message = localize('Please complete the [_1]Real Account form[_2] to verify your age as required by the [_3]UK Gambling[_4] Commission (UKGC).', ['<a href=\'' + urlFor('new_account/realws') + '\'>', '</a>', '<strong>', '</strong>']);
+                                                    message = localize('Please complete the [_1]Real Account form[_2] to verify your age as required by the [_3]UK Gambling[_4] Commission (UKGC).', ['<a href=\'' + Url.urlFor('new_account/realws') + '\'>', '</a>', '<strong>', '</strong>']);
                                                 } else if (Client.hasAccountType('real') && /^virtual|iom$/i.test(Client.get('landing_company_shortcode'))) {
                                                     message = localize('Account access is temporarily limited. Please check your inbox for more details.');
                                                 } else {
@@ -23075,7 +23134,7 @@ var Purchase = function () {
             var extra_attributes = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
             return createElement('div', _extends({ class: 'gr-12 gr-padding-20' }, extra_attributes));
         };
-        var button_element = createElement('a', { class: 'button', href: urlFor('user/settings/professional') });
+        var button_element = createElement('a', { class: 'button', href: Url.urlFor('user/settings/professional') });
         var cta_element = columnElement();
         var message_element = void 0;
 
@@ -28998,7 +29057,7 @@ var binary_desktop_app_id = 14473;
 
 var getAppId = function getAppId() {
     var app_id = null;
-    var user_app_id = 27978; // you can insert Application ID of your registered application here
+    var user_app_id = ''; // you can insert Application ID of your registered application here
     var config_app_id = window.localStorage.getItem('config.app_id');
     var is_new_app = /\/app\//.test(window.location.pathname);
     if (config_app_id) {
