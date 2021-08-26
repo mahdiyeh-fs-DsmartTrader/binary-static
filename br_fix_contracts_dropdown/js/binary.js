@@ -18887,7 +18887,7 @@ var Contract = function () {
         }
 
         if (trade_contract_forms.touchnotouch) {
-            trade_contract_forms.inout = localize('Touch/No Touch');
+            trade_contract_forms.touchnotouch = localize('Touch/No Touch');
         }
 
         return trade_contract_forms;
