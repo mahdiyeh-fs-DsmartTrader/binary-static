@@ -15458,8 +15458,6 @@ var DatePicker = function () {
         return padLeft(date + (add || 0), 2, '0');
     };
 
-    // const toDate = date => [date.getFullYear(), formatDate(date.getMonth(), 1), formatDate(date.getDate())].join('-');
-
     var checkWidth = function checkWidth(selector) {
         var $selector = $(selector);
         var date_picker_conf = date_pickers[selector].config_data;
@@ -15661,10 +15659,6 @@ var TimePicker = function () {
         return padLeft(time, 2, '0');
     };
 
-    var toTime = function toTime(time) {
-        return [formatTime(time.hour), formatTime(time.minute), '00'].join(':');
-    };
-
     var removeJqueryPicker = function removeJqueryPicker(selector, datepickerDate) {
         $(selector).timepicker('destroy').removeAttr('data-picker').off('keydown keyup input');
         if (!datepickerDate) return;
@@ -15691,17 +15685,13 @@ var TimePicker = function () {
 
     var updatePicker = function updatePicker(selector) {
         var $selector = $(selector);
-        var time_picker_conf = time_pickers[selector].config_data;
         if (window.innerWidth < 770 && checkInput('time', 'not-a-time') && $selector.attr('data-picker') !== 'native') {
-            removeJqueryPicker(selector);
-            $selector.attr({ type: 'time', 'data-picker': 'native' }).val($selector.attr('data-value')).removeAttr('readonly').removeClass('clear');
-
-            var minTime = time_picker_conf.minTime;
-            if (minTime) $selector.attr('min', toTime(minTime));
-
-            var maxTime = time_picker_conf.maxTime;
-            if (maxTime) $selector.attr('max', toTime(maxTime));
-            return;
+            $selector.attr({ type: 'text', 'data-picker': 'jquery', readonly: 'readonly' });
+            $selector.removeAttr('min max');
+            if ($selector.attr('data-value') && $selector.hasClass('clearable') && !$selector.attr('disabled')) {
+                clearable($selector);
+            }
+            addJqueryPicker(selector);
         }
         if (window.innerWidth > 769 && $selector.attr('data-picker') !== 'jquery' || window.innerWidth < 770 && !checkInput('time', 'not-a-time')) {
             $selector.attr({ type: 'text', 'data-picker': 'jquery', readonly: 'readonly' });
