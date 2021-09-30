@@ -12365,10 +12365,12 @@ var Page = function () {
                         break;
                     case 'client.accounts':
                         if (evt.newValue !== evt.oldValue) {
-                            var removeSessionStart = function removeSessionStart(input) {
-                                return input.replace(/"session_start":([0-9]+),/g, '');
+                            var removedSessionAndBalnce = function removedSessionAndBalnce(input) {
+                                var clientAccount = input.replace(/"balance":[+-]?([0-9]*[.])?[0-9]+/g, '').replace(/"session_start":([0-9]+),/g, '');
+                                return clientAccount;
                             };
-                            if (removeSessionStart(evt.newValue) !== removeSessionStart(evt.oldValue)) {
+                            // reload the page when the client account values(except balance and startsession) is changed on other pages.
+                            if (removedSessionAndBalnce(evt.newValue) !== removedSessionAndBalnce(evt.oldValue)) {
                                 reload();
                             }
                         }
