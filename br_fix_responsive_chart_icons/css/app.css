@@ -2168,35 +2168,44 @@ ul.bullet {
         #trading_bottom_content #webtrader_chart .chartOptions_overlay.indicators > .indicator-dialog .indicator-builder .levels-dialog button:nth-of-type(2):active:not([disabled]) {
           background: var(--button-primary-default); }
     #trading_bottom_content #webtrader_chart .chartOptions_overlay.chartTypeOverlay {
-      width: 86px; }
+      width: 86px;
+      margin-left: 0 !important; }
       #trading_bottom_content #webtrader_chart .chartOptions_overlay.chartTypeOverlay .row.showborder, #trading_bottom_content #webtrader_chart .chartOptions_overlay.chartTypeOverlay .row .chartOptions .chartTypeOverlay .row:nth-last-child(2), #trading_bottom_content #webtrader_chart .chartOptions_overlay.chartTypeOverlay .row .chartOptions .chartTypeOverlay .row:nth-last-child(3) {
         border-color: var(--border-normal); }
       #trading_bottom_content #webtrader_chart .chartOptions_overlay.chartTypeOverlay .row :hover {
         background-color: var(--general-hover); }
       #trading_bottom_content #webtrader_chart .chartOptions_overlay.chartTypeOverlay .img div {
         margin: 4px; }
-    #trading_bottom_content #webtrader_chart .chartOptions_overlay.timePeriodOverlay .vertical-bottom.button {
-      width: 32px;
-      height: 32px;
-      margin: 4px 10px 4px 0;
-      padding: 0;
-      display: -webkit-box;
-      display: -ms-flexbox;
-      display: flex;
-      -webkit-box-pack: center;
-          -ms-flex-pack: center;
-              justify-content: center;
-      -webkit-box-align: center;
-          -ms-flex-align: center;
-              align-items: center; }
-      #trading_bottom_content #webtrader_chart .chartOptions_overlay.timePeriodOverlay .vertical-bottom.button:last-child {
-        margin-right: 5px; }
-      #trading_bottom_content #webtrader_chart .chartOptions_overlay.timePeriodOverlay .vertical-bottom.button:hover {
-        background-color: var(--general-hover); }
-    #trading_bottom_content #webtrader_chart .chartOptions_overlay.timePeriodOverlay .vertical-bottom.time {
-      margin-left: 5px; }
-    #trading_bottom_content #webtrader_chart .chartOptions_overlay.timePeriodOverlay .row:not(:last-child) {
-      border-color: var(--border-normal); }
+    #trading_bottom_content #webtrader_chart .chartOptions_overlay.timePeriodOverlay {
+      margin-left: 0 !important; }
+      #trading_bottom_content #webtrader_chart .chartOptions_overlay.timePeriodOverlay .vertical-bottom.button {
+        width: 32px;
+        height: 32px;
+        margin: 4px 10px 4px 0;
+        padding: 0;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-pack: center;
+            -ms-flex-pack: center;
+                justify-content: center;
+        -webkit-box-align: center;
+            -ms-flex-align: center;
+                align-items: center; }
+        @media (max-width: 480px) {
+          #trading_bottom_content #webtrader_chart .chartOptions_overlay.timePeriodOverlay .vertical-bottom.button {
+            width: 25px;
+            height: 25px; } }
+        #trading_bottom_content #webtrader_chart .chartOptions_overlay.timePeriodOverlay .vertical-bottom.button:last-child {
+          margin-right: 5px; }
+        #trading_bottom_content #webtrader_chart .chartOptions_overlay.timePeriodOverlay .vertical-bottom.button:hover {
+          background-color: var(--general-hover); }
+      #trading_bottom_content #webtrader_chart .chartOptions_overlay.timePeriodOverlay .vertical-bottom.time {
+        margin-left: 5px; }
+      #trading_bottom_content #webtrader_chart .chartOptions_overlay.timePeriodOverlay .row:not(:last-child) {
+        border-color: var(--border-normal); }
+    #trading_bottom_content #webtrader_chart .chartOptions_overlay.drawingToolOverlay {
+      margin-left: 0 !important; }
     #trading_bottom_content #webtrader_chart.chart-dialog .close {
       background: var(--general-active);
       border-color: var(--general-active);
