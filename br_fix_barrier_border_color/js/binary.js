@@ -13674,10 +13674,10 @@ var ChartSettings = function () {
 
             // need to pass is_tick_trade params explicitly to return correct label when switching between ticks and non-ticks charts
             getEndTime: function getEndTime(is_tick_trade) {
-                return '<div class=\'nowrap gr-padding-10 gr-parent chart-legend-label\'><span style="' + common_vertical_line_style + ' border-color: var(--brand-red-coral); border-style: dashed;"></span>' + (is_tick_trade ? localize('Exit spot') : localize('End time')) + '&nbsp;</div>';
+                return '<div class=\'nowrap gr-padding-10 gr-parent chart-legend-label\'><span style="' + common_vertical_line_style + ' border-color: var(--brand-orange-1); border-style: dashed;"></span>' + (is_tick_trade ? localize('Exit spot') : localize('End time')) + '&nbsp;</div>';
             },
             getStartTime: function getStartTime(is_tick_trade) {
-                return '<div class=\'nowrap gr-padding-10 gr-parent chart-legend-label\'><span style="' + common_vertical_line_style + ' border-color: var(--brand-red-coral); border-style: solid;"></span>' + (is_tick_trade ? localize('Entry spot') : localize('Start time')) + '&nbsp;</div>';
+                return '<div class=\'nowrap gr-padding-10 gr-parent chart-legend-label\'><span style="' + common_vertical_line_style + ' border-color: var(--brand-orange-1); border-style: solid;"></span>' + (is_tick_trade ? localize('Entry spot') : localize('Start time')) + '&nbsp;</div>';
             }
         };
 
