@@ -9893,20 +9893,16 @@ var BinaryLoader = function () {
             loadActiveScript(config);
         }
         if (config.no_mf && Client.isLoggedIn() && Client.isAccountOfType('financial')) {
-            BinarySocket.wait('authorize').then(function (res) {
-                if (Client.isOfferingBlocked(res.authorize.country)) {
-                    displayMessage(error_messages.offerings_blocked());
-                } else {
-                    displayMessage(error_messages.no_mf());
-                }
+            BinarySocket.wait('authorize').then(function () {
+                displayMessage(error_messages.no_mf());
             });
         }
 
-        BinarySocket.wait('authorize').then(function (res) {
+        BinarySocket.wait('authorize').then(function () {
             if (config.no_blocked_country && Client.isLoggedIn() && Client.isOptionsBlocked()) {
                 displayMessage(error_messages.options_blocked());
             }
-            if (Client.isLoggedIn() && Client.get('is_virtual') && Client.isOfferingBlocked(res.authorize.country)) {
+            if (Client.isLoggedIn() && Client.isOfferingBlocked()) {
                 displayMessage(error_messages.offerings_blocked());
             }
         });
@@ -24403,17 +24399,16 @@ var TradePage = function () {
     var onLoad = function onLoad() {
         var iframe_target_origin = getAllowedLocalStorageOrigin();
         BinarySocket.wait('authorize').then(function () {
-            var country = State.getResponse('authorize.country') || State.getResponse('website_status.clients_country');
             if (iframe_target_origin) {
                 var el_iframe = document.getElementById('localstorage-sync');
                 el_iframe.src = iframe_target_origin + '/localstorage-sync.html';
             }
-            init(country);
+            init();
         });
     };
 
-    var init = function init(country) {
-        if (Client.isAccountOfType('financial') || Client.isOptionsBlocked() || Client.get('is_virtual') && Client.isOfferingBlocked(country)) {
+    var init = function init() {
+        if (Client.isAccountOfType('financial') || Client.isOptionsBlocked() || Client.isOfferingBlocked()) {
             return;
         }
 
@@ -24424,6 +24419,8 @@ var TradePage = function () {
             TradingEvents.init();
         }
         BinarySocket.wait('authorize').then(function () {
+            var country = State.getResponse('authorize.country') || State.getResponse('website_status.clients_country');
+
             if (Client.get('is_virtual')) {
                 Header.upgradeMessageVisibility(); // To handle the upgrade buttons visibility
                 // if not loaded by pjax, balance update function calls TopUpVirtualPopup
