@@ -150,9 +150,12 @@ const BinaryLoader = (() => {
             });
         }
         
-        BinarySocket.wait('authorize').then(() => {
+        BinarySocket.wait('authorize').then((res) => {
             if (config.no_blocked_country && Client.isLoggedIn() && Client.isOptionsBlocked()) {
                 displayMessage(error_messages.options_blocked());
+            }
+            if (Client.isLoggedIn() && Client.get('is_virtual') && Client.isOfferingBlocked(res.authorize.country)) {
+                displayMessage(error_messages.offerings_blocked());
             }
         });
 
