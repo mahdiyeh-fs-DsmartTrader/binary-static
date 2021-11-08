@@ -24403,16 +24403,17 @@ var TradePage = function () {
     var onLoad = function onLoad() {
         var iframe_target_origin = getAllowedLocalStorageOrigin();
         BinarySocket.wait('authorize').then(function () {
+            var country = State.getResponse('authorize.country') || State.getResponse('website_status.clients_country');
             if (iframe_target_origin) {
                 var el_iframe = document.getElementById('localstorage-sync');
                 el_iframe.src = iframe_target_origin + '/localstorage-sync.html';
             }
-            init();
+            init(country);
         });
     };
 
-    var init = function init() {
-        if (Client.isAccountOfType('financial') || Client.isOptionsBlocked()) {
+    var init = function init(country) {
+        if (Client.isAccountOfType('financial') || Client.isOptionsBlocked() || Client.get('is_virtual') && Client.isOfferingBlocked(country)) {
             return;
         }
 
@@ -24423,8 +24424,6 @@ var TradePage = function () {
             TradingEvents.init();
         }
         BinarySocket.wait('authorize').then(function () {
-            var country = State.getResponse('authorize.country') || State.getResponse('website_status.clients_country');
-
             if (Client.get('is_virtual')) {
                 Header.upgradeMessageVisibility(); // To handle the upgrade buttons visibility
                 // if not loaded by pjax, balance update function calls TopUpVirtualPopup
