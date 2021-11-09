@@ -9892,24 +9892,14 @@ var BinaryLoader = function () {
         } else {
             loadActiveScript(config);
         }
-        if (config.no_mf && Client.isLoggedIn() && Client.isAccountOfType('financial')) {
-            BinarySocket.wait('authorize').then(function () {
-                displayMessage(error_messages.no_mf());
-            });
-        }
 
         BinarySocket.wait('authorize').then(function () {
             if (config.no_blocked_country && Client.isLoggedIn() && Client.isOptionsBlocked()) {
                 displayMessage(error_messages.options_blocked());
-            }
-            if (Client.isLoggedIn() && Client.isOfferingBlocked()) {
+            } else if (Client.isLoggedIn() && Client.isOfferingBlocked()) {
                 displayMessage(error_messages.offerings_blocked());
-            }
-        });
-
-        BinarySocket.wait('authorize').then(function () {
-            if (config.no_blocked_country && Client.isLoggedIn() && Client.isOptionsBlocked()) {
-                displayMessage(error_messages.options_blocked());
+            } else if (config.no_mf && Client.isLoggedIn() && Client.isAccountOfType('financial')) {
+                displayMessage(error_messages.no_mf());
             }
         });
 
