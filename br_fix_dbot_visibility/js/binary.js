@@ -11037,7 +11037,7 @@ var Header = function () {
         var is_logged_in = Client.isLoggedIn();
         var has_dxtrade = !!(State.getResponse('landing_company.dxtrade_gaming_company') || State.getResponse('landing_company.dxtrade_gaming_company'));
         var should_show_xtrade = is_logged_in ? has_dxtrade : !isEuCountry();
-        var should_show_dbot = !is_logged_in ? !isEuCountry() : true;
+        var should_show_dbot = !isEuCountry();
         var platforms = _extends({
             dtrader: {
                 name: 'DTrader',
